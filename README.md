@@ -1,4 +1,4 @@
-# MMA3001_Project
+# MMA3001_Project - Meat Packing
 Git Repo for MMA3001_project 2026
 
 AI Declaration:
