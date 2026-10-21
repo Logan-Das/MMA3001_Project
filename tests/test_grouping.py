@@ -6,6 +6,7 @@ import pytest
 from porkqc.grouping import (
     FrameId,
     cross_split_near_duplicates,
+    deduplicate_frames,
     dhash,
     frame_gaps,
     gap_percentiles,
@@ -58,6 +59,16 @@ def test_same_frame_always_same_group_and_stems_separate():
 def test_negative_gap_rejected():
     with pytest.raises(ValueError):
         group_by_frame_gap([FrameId("a", 1)], -1)
+
+
+def test_deduplicate_keeps_one_copy_preferring_low_priority():
+    ids = [FrameId("v", 1), FrameId("v", 1), FrameId("v", 2), FrameId("v", 1)]
+    # Index 3 is the un-augmented (priority 0) copy of frame 1.
+    assert deduplicate_frames(ids, [1, 1, 1, 0]) == [2, 3]
+    # Equal priority: the first copy is kept.
+    assert deduplicate_frames(ids, [1, 1, 1, 1]) == [0, 2]
+    with pytest.raises(ValueError):
+        deduplicate_frames(ids, [0])
 
 
 def test_groups_spanning_splits_detects_leakage():

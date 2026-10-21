@@ -83,6 +83,35 @@ def parse_frame_id(filename: str | Path) -> FrameId:
     return FrameId(m.group("stem"), int(m.group("frame")))
 
 
+def deduplicate_frames(frame_ids: Sequence[FrameId], priority: Sequence[int]) -> list[int]:
+    """Keep one image per video frame, dropping augmented copies.
+
+    Roboflow augmentation writes several copies of each training frame (same
+    frame number, different hash and colour). Re-splitting those copies would
+    put near-identical images in the new test set, so only one copy of each
+    frame is kept.
+
+    Args:
+        frame_ids: One `FrameId` per image.
+        priority: One integer per image; for each frame the image with the
+            lowest priority is kept (ties: the earliest index). Give
+            un-augmented sources (valid, test) a lower value than train.
+
+    Returns:
+        Sorted indices of the images to keep.
+
+    Raises:
+        ValueError: If the two sequences differ in length.
+    """
+    if len(frame_ids) != len(priority):
+        raise ValueError("frame_ids and priority must have the same length")
+    best: dict[FrameId, int] = {}
+    for i, (f, p) in enumerate(zip(frame_ids, priority)):
+        if f not in best or p < priority[best[f]]:
+            best[f] = i
+    return sorted(best.values())
+
+
 def frame_gaps(frames: Sequence[int]) -> np.ndarray:
     """Gaps between consecutive distinct frame numbers after sorting.
 

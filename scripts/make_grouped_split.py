@@ -1,11 +1,14 @@
 """
 Build a leakage-free train/val/test split from a Roboflow YOLO export.
 
-Use an export made WITHOUT augmentation, so each original image appears once.
+Works on an augmented export (e.g. Version 4): augmented copies of a frame share
+its frame number, so only one copy per frame is kept (the un-augmented valid or
+test copy where one exists).
 
 Steps:
   1. Pool every image from the export's train/valid/test folders.
-  2. Parse the frame number from each file name and print the gap percentiles.
+  2. Parse the frame number from each file name, drop augmented duplicates and
+     print the gap percentiles.
   3. Report how many frame groups the ORIGINAL Roboflow split shares between
      splits (the leakage evidence for the report).
   4. Assign whole groups to new splits, balancing class counts.
@@ -14,7 +17,7 @@ Steps:
 
 Example (Colab):
     python scripts/make_grouped_split.py \
-        --src "/content/Pork-Rasher-Error(Packaging)-5" \
+        --src "/content/Pork-Rasher-Error(Packaging)-4" \
         --dst /content/pork_grouped --max-gap 5 --seed 0
 
 Run with --dry-run first to see the gap percentiles and choose --max-gap.
@@ -34,6 +37,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from porkqc import CLASS_NAMES  # noqa: E402
 from porkqc.grouping import (  # noqa: E402
+    deduplicate_frames,
     gap_percentiles,
     group_by_frame_gap,
     grouped_split,
@@ -48,7 +52,7 @@ SPLIT_NAMES = ("train", "val", "test")
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--src", required=True, help="Roboflow YOLO export folder (no augmentation)")
+    ap.add_argument("--src", required=True, help="Roboflow YOLO export folder")
     ap.add_argument("--dst", help="Output dataset folder")
     ap.add_argument("--max-gap", type=int, default=5, help="Largest frame gap treated as the same tray")
     ap.add_argument("--ratios", type=float, nargs=3, default=(0.7, 0.15, 0.15))
@@ -77,6 +81,31 @@ def main(argv=None):
     if bad:
         sys.exit(f"{len(bad)} file names have no frame number, e.g. {bad[:3]}. Inspect them first.")
 
+    # Drop augmented copies: keep one image per frame, preferring the
+    # un-augmented valid/test copy, then the first train copy by name.
+    k = len(CLASS_NAMES)
+    priority = [0 if s > 0 else 1 for s in orig_split]
+    keep = deduplicate_frames(fids, priority)
+    n_dropped = len(images) - len(keep)
+    if n_dropped:
+        # Augmented copies of one frame must share labels (colour-only
+        # augmentation does not move boxes); warn if they do not.
+        def box_set(p):
+            arr = read_yolo_label(label_path_for(p), k)
+            return sorted(tuple(np.round(row, 3)) for row in arr)
+
+        by_frame: dict = {}
+        for p, f in zip(images, fids):
+            by_frame.setdefault(f, []).append(box_set(p))
+        mismatched = sum(any(b != boxes[0] for b in boxes[1:]) for boxes in by_frame.values())
+        print(f"Removed {n_dropped} augmented duplicate images; {len(keep)} unique frames remain")
+        if mismatched:
+            print(f"WARNING: {mismatched} frames have copies with different labels "
+                  f"(geometric augmentation?). The kept copy's labels are used.")
+    images = [images[i] for i in keep]
+    orig_split = [orig_split[i] for i in keep]
+    fids = [fids[i] for i in keep]
+
     frames_by_stem: dict[str, list[int]] = {}
     for f in fids:
         frames_by_stem.setdefault(f.stem, []).append(f.frame)
@@ -96,7 +125,6 @@ def main(argv=None):
           f"({n_imgs_shared} images affected)")
 
     # 4. Profiles: [images, background images, boxes per class].
-    k = len(CLASS_NAMES)
     labels = [read_yolo_label(label_path_for(p), k) for p in images]
     profiles: dict[str, np.ndarray] = {}
     for g, lab in zip(groups, labels):

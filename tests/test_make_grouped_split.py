@@ -24,10 +24,13 @@ def fake_export(root: Path):
             frame = tray * 100 + j
             s = splits[k % 3]
             k += 1
-            name = f"frame_with_red_{frame}_jpg.rf.{frame:032x}"
-            (root / s / "images" / f"{name}.jpg").write_bytes(b"x")
             label = "" if tray in (0, 5) else f"{tray % 5} 0.5 0.5 0.1 0.1\n"
-            (root / s / "labels" / f"{name}.txt").write_text(label)
+            # Train frames get 3 augmented copies (same frame, different hash),
+            # as in the Roboflow V4 export.
+            for copy in range(3 if s == "train" else 1):
+                name = f"frame_with_red_{frame}_jpg.rf.{frame:028x}{copy:04x}"
+                (root / s / "images" / f"{name}.jpg").write_bytes(b"x")
+                (root / s / "labels" / f"{name}.txt").write_text(label)
 
 
 def test_split_has_no_shared_groups(tmp_path, capsys):
@@ -36,6 +39,9 @@ def test_split_has_no_shared_groups(tmp_path, capsys):
     make_grouped_split.main(["--src", str(src), "--dst", str(dst), "--max-gap", "5"])
 
     out = capsys.readouterr().out
+    # 14 train frames x 3 copies + 26 others = 68 files -> 40 unique frames.
+    assert "Removed 28 augmented duplicate images; 40 unique frames remain" in out
+    assert "WARNING" not in out
     assert "10 groups" in out
     assert "ORIGINAL split: 10 of 10 groups span 2+ splits" in out
 

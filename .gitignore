@@ -1,0 +1,24 @@
+# Datasets and model outputs are large and are re-downloaded / re-generated
+datasets/
+data/
+*.zip
+runs/
+*.pt
+*.onnx
+*.engine
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+.ipynb_checkpoints/
+
+# Secrets: never commit API keys
+.env
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
