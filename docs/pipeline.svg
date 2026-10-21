@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 150" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <rect width="900" height="150" fill="#ffffff"/>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#444"/></marker></defs>
+  <g stroke="#444" fill="#f3f5f8">
+    <rect x="10" y="40" width="140" height="64" rx="8"/>
+    <rect x="190" y="40" width="160" height="64" rx="8"/>
+    <rect x="390" y="40" width="160" height="64" rx="8"/>
+    <rect x="590" y="40" width="140" height="64" rx="8"/>
+    <rect x="770" y="40" width="120" height="64" rx="8" fill="#e8f2ea"/>
+  </g>
+  <g stroke="#444" stroke-width="1.5" marker-end="url(#a)">
+    <line x1="150" y1="72" x2="188" y2="72"/><line x1="350" y1="72" x2="388" y2="72"/>
+    <line x1="550" y1="72" x2="588" y2="72"/><line x1="730" y1="72" x2="768" y2="72"/>
+  </g>
+  <g text-anchor="middle" fill="#111">
+    <text x="80" y="68" font-weight="bold">Tray image</text><text x="80" y="86">RGB 720×540</text>
+    <text x="270" y="68" font-weight="bold">YOLO11 detector</text><text x="270" y="86">resize to 640 px</text>
+    <text x="470" y="68" font-weight="bold">Boxes</text><text x="470" y="86">class + confidence</text>
+    <text x="660" y="68" font-weight="bold">Max confidence</text><text x="660" y="86">≥ t (from val)?</text>
+    <text x="830" y="68" font-weight="bold">PASS / FAIL</text><text x="830" y="86">per tray</text>
+  </g>
+  <text x="450" y="135" text-anchor="middle" fill="#555" font-size="12">Evaluated on a split where neighbouring video frames never cross between train, val and test</text>
+</svg>

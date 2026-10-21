@@ -1,0 +1,10 @@
+# Core package and tests (CPU only)
+numpy>=1.24
+pyyaml>=6
+pytest>=8
+pytest-html>=4
+pdoc>=14
+
+# Detector training and inference (install in Colab / on a GPU machine)
+ultralytics>=8.3
+roboflow

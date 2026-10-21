@@ -19,3 +19,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+This licence covers the code in this repository only. The image dataset is
+hosted on Roboflow Universe and is NOT redistributed here; its own licence
+applies (see the dataset page). Pretrained YOLO11 weights are distributed by
+Ultralytics under AGPL-3.0. The project brief in docs/ belongs to the unit.
