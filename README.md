@@ -45,7 +45,8 @@ src/porkqc/          Python package (documented, unit-tested)
   timing.py          latency benchmark and GFLOP/s performance model
   detect.py          thin wrapper around Ultralytics (imported lazily)
 scripts/             command-line entry points used by the notebook
-  make_grouped_split.py, train.py, evaluate_trays.py, benchmark.py
+  make_grouped_split.py, train.py, evaluate_trays.py, benchmark.py,
+  plot_tray_scores.py
 notebooks/
   01_baseline_v4.ipynb      first experiment: YOLO11n on the Roboflow V4 random split
   02_grouped_pipeline.ipynb  leakage-free experiments, run in order on a Colab T4
