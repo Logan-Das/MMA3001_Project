@@ -1,0 +1,58 @@
+{
+  "threshold_from_val": 0.08,
+  "min_recall_target": 0.95,
+  "test_trays": 198,
+  "test_defective": 160,
+  "test_good": 38,
+  "tp": 154,
+  "fp": 17,
+  "fn": 6,
+  "tn": 21,
+  "recall": 0.9625,
+  "precision": 0.9005847953216374,
+  "false_alarm_rate": 0.4473684210526316,
+  "f1": 0.9305135951661632,
+  "accuracy": 0.8838383838383839,
+  "recall_95ci": [
+    0.9206091783691167,
+    0.982702312729603
+  ],
+  "false_alarm_95ci": [
+    0.3014616531155089,
+    0.6029397082091058
+  ],
+  "missed_by_class": {
+    "twisted-meat": 1,
+    "packaging-error": 2,
+    "unsealed": 1,
+    "loose-meat": 1,
+    "wrinkle": 1
+  },
+  "missed_files": [
+    "frame_with_red_1572_jpg.rf.b3d4df3f1c03a90a6271936c2390adbd.jpg",
+    "frame_with_red_2062_jpg.rf.2ad8e05bf6448f19672ca8188155f85b.jpg",
+    "frame_with_red_3313_jpg.rf.2d8f28b7fc572a529201af0de5904704.jpg",
+    "frame_with_red_3644_jpg.rf.09ede0ac952c5e48d54d7bc9211200b2.jpg",
+    "frame_with_red_532_jpg.rf.06582f09c0e6d93e83d3ab6d2ce69716.jpg",
+    "frame_with_red_8644_jpg.rf.186df79c453444de8e2f5314429536f7.jpg"
+  ],
+  "false_alarm_files": [
+    "frame_with_red_2186_jpg.rf.03764974141cd9c0a9628d4348cc2d22.jpg",
+    "frame_with_red_4388_jpg.rf.6568f20d73e340239fa478ec155ab1c5.jpg",
+    "frame_with_red_4978_jpg.rf.0b50dae3d910e0e2757a7fa500fac479.jpg",
+    "frame_with_red_5516_jpg.rf.1a8708590be478f0e6673dec6ad181a4.jpg",
+    "frame_with_red_565_jpg.rf.08b623899f61719ea1c1efaa365b1436.jpg",
+    "frame_with_red_6009_jpg.rf.653fedb13ccf56407b87b79ff65f2f4f.jpg",
+    "frame_with_red_6015_jpg.rf.079f43aa218815fa3412ec6ec5bf6aa7.jpg",
+    "frame_with_red_6827_jpg.rf.3436ace6a39f1fb8d8bf43b2dfd8ac5a.jpg",
+    "frame_with_red_6888_jpg.rf.7ba849ac28ea9c7de12f18bbc5a7770d.jpg",
+    "frame_with_red_6958_jpg.rf.02d8905f8e8f0aa430a50443be1e5bab.jpg",
+    "frame_with_red_7008_jpg.rf.6f5ebf66a4062ff69e3fcca46562098c.jpg",
+    "frame_with_red_7771_jpg.rf.72884f3c63453be69d06d533cf2e0bc4.jpg",
+    "frame_with_red_7780_jpg.rf.000964e2756363afa87d54a34d4a2cf1.jpg",
+    "frame_with_red_7821_jpg.rf.161ec73d70f64d24e27f91bd472ee53b.jpg",
+    "frame_with_red_8619_jpg.rf.431f290ac53c688758742ab37a9513fa.jpg",
+    "frame_with_red_8657_jpg.rf.67150dc490ad239aea5ed99dc5ebf099.jpg",
+    "frame_with_red_9274_jpg.rf.36c7db677e61628f7bef358a3bfb1a70.jpg"
+  ]
+}
