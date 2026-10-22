@@ -7,9 +7,9 @@ Ultralytics; this package wraps it and adds the parts that are specific to this
 project:
 
 * `porkqc.labels` reads and validates YOLO-format label files.
-* `porkqc.grouping` detects near-duplicate video frames and builds a
-  leakage-free train/val/test split in which every group of neighbouring
-  frames stays in a single split.
+* `porkqc.grouping` removes augmented copies by content, groups neighbouring
+  video frames and builds a leakage-free train/val/test split in which every
+  group stays in a single split.
 * `porkqc.tray_eval` turns per-box detections into a tray-level pass/fail
   decision and evaluates it (confusion matrix, threshold sweep, Wilson
   confidence intervals, threshold selection on the validation split).

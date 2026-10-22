@@ -112,6 +112,84 @@ def deduplicate_frames(frame_ids: Sequence[FrameId], priority: Sequence[int]) ->
     return sorted(best.values())
 
 
+def thumbnail_feature(path: str | Path, size: tuple[int, int] = (48, 36)) -> np.ndarray:
+    """Small greyscale thumbnail, normalised to mean 0 and standard deviation 1.
+
+    The normalisation cancels uniform brightness and contrast changes, so
+    colour-augmented copies of one image give nearly identical vectors, while
+    a different picture (another part of the scene) does not.
+
+    Args:
+        path: Image file.
+        size: Thumbnail (width, height) in pixels.
+
+    Returns:
+        1-D float array of length ``width * height``.
+    """
+    from PIL import Image  # imported here so the rest of the module needs only numpy
+
+    a = np.asarray(Image.open(path).convert("L").resize(size), dtype=float).ravel()
+    return (a - a.mean()) / (a.std() + 1e-9)
+
+
+def correlation(a: np.ndarray, b: np.ndarray) -> float:
+    """Pearson correlation of two vectors produced by `thumbnail_feature`."""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    if a.shape != b.shape:
+        raise ValueError("features must have the same length")
+    return float(a @ b) / a.size
+
+
+def deduplicate_by_content(
+    frame_ids: Sequence[FrameId],
+    priority: Sequence[int],
+    features: Sequence[np.ndarray],
+    min_corr: float = 0.9,
+) -> list[int]:
+    """Keep one image per distinct picture within each video frame.
+
+    In this dataset one frame number can hold more than one *different*
+    picture (a zoomed region of a different part of the camera view), each
+    with its own colour-augmented copies. `deduplicate_frames` would keep
+    only one of those pictures and silently drop the others with their
+    labels. Here, copies of a frame are clustered by thumbnail correlation:
+    copies at or above ``min_corr`` are the same picture (one is kept),
+    copies below it are different pictures (each is kept).
+
+    Args:
+        frame_ids: One `FrameId` per image.
+        priority: Lower is preferred as the kept copy (e.g. 0 for un-augmented
+            valid/test copies, 1 for augmented train copies); ties keep the
+            earlier index.
+        features: One `thumbnail_feature` vector per image.
+        min_corr: Correlation at or above which two copies count as the same
+            picture. Colour-only augmentation gives about 0.9 or more.
+
+    Returns:
+        Sorted indices of the images to keep.
+
+    Raises:
+        ValueError: If the inputs differ in length or ``min_corr`` is not in
+            (-1, 1].
+    """
+    n = len(frame_ids)
+    if len(priority) != n or len(features) != n:
+        raise ValueError("frame_ids, priority and features must have the same length")
+    if not -1 < min_corr <= 1:
+        raise ValueError("min_corr must be in (-1, 1]")
+    by_frame: dict[FrameId, list[int]] = defaultdict(list)
+    for i, f in enumerate(frame_ids):
+        by_frame[f].append(i)
+    keep = []
+    for idx in by_frame.values():
+        reps: list[int] = []
+        for i in sorted(idx, key=lambda i: (priority[i], i)):
+            if all(correlation(features[i], features[r]) < min_corr for r in reps):
+                reps.append(i)
+        keep += reps
+    return sorted(keep)
+
+
 def frame_gaps(frames: Sequence[int]) -> np.ndarray:
     """Gaps between consecutive distinct frame numbers after sorting.
 

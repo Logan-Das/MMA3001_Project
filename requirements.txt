@@ -1,6 +1,7 @@
 # Core package and tests (CPU only)
 numpy>=1.24
 pyyaml>=6
+pillow>=9
 pytest>=8
 pytest-html>=4
 pdoc>=14

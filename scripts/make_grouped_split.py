@@ -1,14 +1,17 @@
 """
 Build a leakage-free train/val/test split from a Roboflow YOLO export.
 
-Works on an augmented export (e.g. Version 4): augmented copies of a frame share
-its frame number, so only one copy per frame is kept (the un-augmented valid or
-test copy where one exists).
+Works on an augmented export (e.g. Version 4). Augmented copies of a picture
+share its frame number; copies are compared by thumbnail correlation, so one
+copy of each distinct picture is kept (the un-augmented valid or test copy where
+one exists). Some frame numbers hold two different pictures (zoomed regions of
+different parts of the camera view); both are kept and always placed in the
+same split, because they show the same moment on the line.
 
 Steps:
   1. Pool every image from the export's train/valid/test folders.
-  2. Parse the frame number from each file name, drop augmented duplicates and
-     print the gap percentiles.
+  2. Parse the frame number from each file name, drop augmented duplicates
+     (by content) and print the gap percentiles.
   3. Report how many frame groups the ORIGINAL Roboflow split shares between
      splits (the leakage evidence for the report).
   4. Assign whole groups to new splits, balancing class counts.
@@ -37,7 +40,9 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from porkqc import CLASS_NAMES  # noqa: E402
 from porkqc.grouping import (  # noqa: E402
-    deduplicate_frames,
+    correlation,
+    deduplicate_by_content,
+    thumbnail_feature,
     gap_percentiles,
     group_by_frame_gap,
     grouped_split,
@@ -57,6 +62,8 @@ def main(argv=None):
     ap.add_argument("--max-gap", type=int, default=5, help="Largest frame gap treated as the same tray")
     ap.add_argument("--ratios", type=float, nargs=3, default=(0.7, 0.15, 0.15))
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--min-corr", type=float, default=0.9,
+                    help="Thumbnail correlation at or above which two copies of a frame are the same picture")
     ap.add_argument("--dry-run", action="store_true", help="Only print statistics")
     args = ap.parse_args(argv)
 
@@ -81,27 +88,42 @@ def main(argv=None):
     if bad:
         sys.exit(f"{len(bad)} file names have no frame number, e.g. {bad[:3]}. Inspect them first.")
 
-    # Drop augmented copies: keep one image per frame, preferring the
-    # un-augmented valid/test copy, then the first train copy by name.
+    # Drop augmented copies. One frame number can hold several DIFFERENT
+    # pictures (zoomed regions of different parts of the camera view), so
+    # copies are compared by content: same picture -> keep one (preferring
+    # the un-augmented valid/test copy), different picture -> keep each.
     k = len(CLASS_NAMES)
     priority = [0 if s > 0 else 1 for s in orig_split]
-    keep = deduplicate_frames(fids, priority)
-    n_dropped = len(images) - len(keep)
-    if n_dropped:
-        # Augmented copies of one frame must share labels (colour-only
-        # augmentation does not move boxes); warn if they do not.
-        def box_set(p):
-            arr = read_yolo_label(label_path_for(p), k)
-            return sorted(tuple(np.round(row, 3)) for row in arr)
+    feats = [thumbnail_feature(p) for p in images]
+    keep = deduplicate_by_content(fids, priority, feats, args.min_corr)
+    kept = set(keep)
+    n_frames = len(set(fids))
+    n_multi = len(keep) - n_frames
+    print(f"Removed {len(images) - len(keep)} augmented duplicate images; "
+          f"{len(keep)} distinct pictures from {n_frames} frames "
+          f"({n_multi} extra pictures share a frame number with another)")
 
-        by_frame: dict = {}
-        for p, f in zip(images, fids):
-            by_frame.setdefault(f, []).append(box_set(p))
-        mismatched = sum(any(b != boxes[0] for b in boxes[1:]) for boxes in by_frame.values())
-        print(f"Removed {n_dropped} augmented duplicate images; {len(keep)} unique frames remain")
-        if mismatched:
-            print(f"WARNING: {mismatched} frames have copies with different labels "
-                  f"(geometric augmentation?). The kept copy's labels are used.")
+    # Copies of the same picture must carry the same labels (colour-only
+    # augmentation does not move boxes). Check each dropped copy against the
+    # copy that was kept for it.
+    def box_set(i):
+        arr = read_yolo_label(label_path_for(images[i]), k)
+        return sorted(tuple(np.round(row, 3)) for row in arr)
+
+    mismatched = 0
+    by_frame: dict = {}
+    for i, f in enumerate(fids):
+        by_frame.setdefault(f, []).append(i)
+    for idx in by_frame.values():
+        reps = [i for i in idx if i in kept]
+        for i in idx:
+            if i in kept:
+                continue
+            rep = max(reps, key=lambda r: correlation(feats[i], feats[r]))
+            mismatched += box_set(i) != box_set(rep)
+    if mismatched:
+        print(f"WARNING: {mismatched} dropped copies have labels that differ from the kept copy. "
+              f"The kept copy's labels are used.")
     images = [images[i] for i in keep]
     orig_split = [orig_split[i] for i in keep]
     fids = [fids[i] for i in keep]
@@ -150,6 +172,10 @@ def main(argv=None):
 
     # 5. Write the dataset.
     dst = Path(args.dst)
+    if dst.exists():
+        # Files from an earlier run would otherwise stay in their old split.
+        print(f"Removing existing {dst}")
+        shutil.rmtree(dst)
     for s in SPLIT_NAMES:
         (dst / s / "images").mkdir(parents=True, exist_ok=True)
         (dst / s / "labels").mkdir(parents=True, exist_ok=True)

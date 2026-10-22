@@ -9,7 +9,7 @@ description = "Tray-level packaging-defect inspection for pork rashers (MMA3001 
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
-dependencies = ["numpy>=1.24", "pyyaml>=6"]
+dependencies = ["numpy>=1.24", "pyyaml>=6", "pillow>=9"]
 
 [project.optional-dependencies]
 detect = ["ultralytics>=8.3", "roboflow"]

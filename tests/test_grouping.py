@@ -5,7 +5,9 @@ import pytest
 
 from porkqc.grouping import (
     FrameId,
+    correlation,
     cross_split_near_duplicates,
+    deduplicate_by_content,
     deduplicate_frames,
     dhash,
     frame_gaps,
@@ -69,6 +71,27 @@ def test_deduplicate_keeps_one_copy_preferring_low_priority():
     assert deduplicate_frames(ids, [1, 1, 1, 1]) == [0, 2]
     with pytest.raises(ValueError):
         deduplicate_frames(ids, [0])
+
+
+def test_deduplicate_by_content_keeps_distinct_pictures():
+    rng = np.random.default_rng(0)
+    a, b = rng.standard_normal(100), rng.standard_normal(100)
+    ids = [FrameId("v", 1)] * 5 + [FrameId("v", 2)]
+    # Frame 1: three copies of picture a (one un-augmented), two copies of a
+    # different picture b. Frame 2: one picture.
+    feats = [a + 0.05 * rng.standard_normal(100), a, a * 1.0 + 0.02, b, b + 0.05, a]
+    prio = [1, 0, 1, 1, 1, 1]
+    keep = deduplicate_by_content(ids, prio, feats, 0.9)
+    assert keep == [1, 3, 5]          # un-augmented copy of a, first copy of b, frame 2
+
+
+def test_deduplicate_by_content_validation():
+    with pytest.raises(ValueError):
+        deduplicate_by_content([FrameId("v", 1)], [0], [])
+    with pytest.raises(ValueError):
+        deduplicate_by_content([FrameId("v", 1)], [0], [np.ones(3)], min_corr=1.5)
+    with pytest.raises(ValueError):
+        correlation(np.ones(3), np.ones(4))
 
 
 def test_groups_spanning_splits_detects_leakage():

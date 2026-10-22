@@ -40,7 +40,7 @@ which only costs a manual re-check.
 ```
 src/porkqc/          Python package (documented, unit-tested)
   labels.py          read and validate YOLO labels
-  grouping.py        frame grouping, leakage-free split, perceptual-hash check
+  grouping.py        content-aware de-duplication, frame grouping, leakage-free split
   tray_eval.py       pass/fail metrics, threshold selection, Wilson intervals
   timing.py          latency benchmark and GFLOP/s performance model
   detect.py          thin wrapper around Ultralytics (imported lazily)
@@ -49,6 +49,7 @@ scripts/             command-line entry points used by the notebook
 notebooks/
   01_baseline_v4.ipynb      first experiment: YOLO11n on the Roboflow V4 random split
   02_grouped_pipeline.ipynb  leakage-free experiments, run in order on a Colab T4
+  03_data_checks.ipynb      checks on copies, cropping and labels (CPU only)
   colab_git_sync.ipynb      clone / commit / push this repo from Colab
 tests/               pytest unit and end-to-end tests (no GPU needed)
 results/             metrics from each experiment (CSV/JSON)
