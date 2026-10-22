@@ -30,6 +30,8 @@ Ultralytics 8.4.183, PyTorch 2.11 + CUDA 13.0, 22 October 2026.
 | `yolo11{n,s}_benchmark_fp32.json`, `_fp16.json` | End-to-end latency: 20 warm-up calls, 594 timed calls, median, 95th percentile, GFLOP/s |
 | `yolo11{n,s}_training_log.csv`, `_training_curves.png`, `_train_args.yaml` | Training history and exact settings (100 epochs, 640 px, batch 16, seed 0) |
 | `yolo11{n,s}_test_confusion_matrix.png`, `_test_PR_curve.png` | Ultralytics test-split plots |
+| `yolo11n_tray_scores_test.csv` | One row per test tray: ground truth, classes, highest confidence, decision (`scripts/plot_tray_scores.py`) |
+| `yolo11n_max_conf_histogram.png` | Highest confidence for defective and good trays, with the threshold; misses and false alarms are the two overlapping tails |
 | `yolo11n_error_cases.png` | The 8 missed and 11 false-alarm test trays, model boxes and labelled boxes (green, dashed) |
 | `data_check_*.png` | Data checks from `notebooks/03_data_checks.ipynb`: copies of a frame, Version 1 vs Version 4 framing, a label mismatch, runs of consecutive frames |
 | `split_manifest.csv` | The split itself |
