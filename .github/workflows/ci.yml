@@ -1,0 +1,28 @@
+# Runs the tests and rebuilds the HTML docs on every push.
+name: tests-and-docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (CPU-only; the detector is not needed for the tests)
+        run: pip install numpy pyyaml pytest pytest-html pdoc
+      - name: Run tests
+        run: python -m pytest -v --html=reports/test_report.html --self-contained-html
+      - name: Build docs
+        run: pdoc --docformat google -o docs/api src/porkqc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-report-and-docs
+          path: |
+            reports/
+            docs/api/
