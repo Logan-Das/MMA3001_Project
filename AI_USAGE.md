@@ -15,15 +15,15 @@ whenever AI is used, with how the output was checked. Dates are DD/MM/YYYY.
 
 ## Decisions that remained mine
 
-- **Scope:** a tray-level PASS/FAIL decision plus a model comparison, rather than counting rashers or measuring severity. [Your reason]
-- **Version 4 rather than Version 1:** [Your reason, e.g. more labelled pictures, colour-only augmentation, comparable with the baseline, despite the zoomed view]
-- **`max_gap = 15`:** [Your reason, e.g. from the gap percentiles and the frame strips]
-- **95 % recall target for the threshold:** [Your reason, e.g. a missed defect reaches a customer, a false alarm only costs a re-check]
-- **Keeping all five classes:** [Your reason, e.g. comparability with the baseline; rare classes reported as not interpretable]
-- **Choosing YOLO11n over YOLO11s:** [Your reason, from the results]
-- **What to claim:** [e.g. reporting the 29 % false-alarm rate and the baseline's optimism honestly]
+- **Scope:** a tray-level PASS/FAIL decision plus a model comparison, rather than counting rashers or measuring severity.
+- **Version 4 rather than Version 1:** Version 4 had more labeled images, it's augmentation was colour only (opposed to V1s rotation, flip and shear) so copies could be safely reduced to the original picture. However the cost is the zoomed view, which you accepted and reported as a limitation.
+- **`max_gap = 15`:** 15 sits between the 75th (11) and 90th (19) percentiles of the gaps between sampled frames.The frame strips showed the same tray a few frames apart (415/416, 426/428). A gap of 5 left half of all neighbouring frames in different groups (606 groups), which doesn’t remove leakage. A much larger gap would chain unrelated trays together and leave too few groups to balance the splits.
+- **95 % recall target for the threshold:** The two errors cost different amounts. A missed defect, especially an unsealed tray, reaches a customer and is a food-safety and recall risk. A false alarm only costs one manual re-check. Recall comes first, and the false-alarm rate is what's reported as the price.
+- **Keeping all five classes:** It keeps the comparison with the baseline fair, since it used the same five classes. The PASS/FAIL decision doesn’t depend on the class, so merging rare classes wouldn’t change the headline result. The rare classes (1–5 test boxes) are reported as too small to interpret, rather than hidden.
+- **Choosing YOLO11n over YOLO11s:** At the chosen thresholds, YOLO11s catches only 2 more defective trays (154 vs 152) but raises 6 more false alarms (17 vs 11). It’s the same speed (13.5 ms), so YOLO11s’s extra size buys nothing. It’s smaller (2.6 M vs 9.4 M parameters), which suits line hardware.
+- **What to claim:** a PASS covers only the visible part of the tray. The claim reliability for unsealed trays (0 of 72 missed) was very good, but it was not accurate for defect type.
 
 ## Notes
 
-- API keys are kept in Colab Secrets and are never committed. [Either: "The Roboflow key pasted into a chat on 16/10/2026 was regenerated." or regenerate it first, then write that.]
+- API keys are kept in Colab Secrets and are never committed. 
 - Commits written with AI assistance carry a `Co-Authored-By` line.
